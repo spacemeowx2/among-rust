@@ -34,6 +34,7 @@ command = "cargo"
 [tasks.run]
 command = "${CARGO_TARGET_DIR}/${ENV_DIR}/${CARGO_MAKE_BINARY_EXECUTABLE_NAME}"
 dependencies = ["build-native"]
+watch = true
 
 [tasks.serve]
 command = "basic-http-server"
