@@ -39,6 +39,7 @@ dependencies = ["build-native"]
 command = "basic-http-server"
 args = ["-x"]
 dependencies = ["build-web", "basic-http-server"]
+watch = true
 
 [tasks.test]
 disabled = true

@@ -1,12 +1,33 @@
-use bevy::prelude::*;
+use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, log::prelude::*, prelude::*};
+use components::Position;
+use entities::create_player;
+use plugins::input::InputPlugin;
+use systems::player_move::player_move;
 
+mod components;
+mod entities;
+mod plugins;
+mod systems;
+
+#[bevy_main]
 fn main() {
     let mut app = App::build();
     app.add_plugins(DefaultPlugins);
+    app.add_plugin(FrameTimeDiagnosticsPlugin::default());
+    app.add_plugin(InputPlugin::default());
     #[cfg(target_arch = "wasm32")]
     app.add_plugin(bevy_webgl2::WebGL2Plugin);
     app.add_startup_system(setup.system());
-    app.add_system(animate_sprite_system.system()).run();
+    app.add_system(animate_sprite_system.system());
+    app.add_system(player_move.system());
+    // app.add_system(print_player_system.system());
+    app.run();
+}
+
+fn print_player_system(player: Query<(Entity, &Position)>) {
+    for (_, pos) in player.iter() {
+        info!("position {} {}", pos.0.x, pos.0.y)
+    }
 }
 
 fn animate_sprite_system(
@@ -31,9 +52,10 @@ fn setup(
     let texture_handle = asset_server.load("textures/rpg/chars/gabe/gabe-idle-run.png");
     let texture_atlas = TextureAtlas::from_grid(texture_handle, Vec2::new(24.0, 24.0), 7, 1);
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
-    commands
-        .spawn(Camera2dBundle::default())
-        .spawn(SpriteSheetBundle {
+    commands.spawn(Camera2dBundle::default());
+
+    create_player(commands)
+        .with_bundle(SpriteSheetBundle {
             texture_atlas: texture_atlas_handle,
             transform: Transform::from_scale(Vec3::splat(6.0)),
             ..Default::default()
