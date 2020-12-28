@@ -69,7 +69,7 @@ fn setup(
     create_player(commands)
         .with_bundle(SpriteSheetBundle {
             texture_atlas: texture_atlas_handle,
-            transform: Transform::from_scale(Vec3::new(6.0, 6.0, 1.0)),
+            transform: Transform::from_scale(Vec3::new(3.0, 3.0, 1.0)),
             ..Default::default()
         })
         .with(Timer::from_seconds(0.1, true))
