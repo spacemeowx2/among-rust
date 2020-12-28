@@ -3,6 +3,51 @@ on: [push, pull_request]
 name: Build
 
 jobs:
+  web:
+    name: Web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Remove .cargo/config.toml
+        run: rm .cargo/config.toml
+      - name: Cache Cargo
+        uses: actions/cache@v1
+        with:
+          path: ~/.cargo
+          key: ${{ matrix.os }}-stable-cargo-v1
+          restore-keys: |
+            ${{ matrix.os }}-stable-cargo-v1
+      - name: Setup toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.target }}
+          override: true
+      - uses: actions-rs/install@v0.1
+        with:
+          crate: cargo-make
+          version: latest
+          use-tool-cache: true
+      - name: Build release
+        uses: actions-rs/cargo@v1
+        with:
+          command: make
+          args: build-web -p release
+      - name: Make public folder
+        run: |
+          rm -rf build
+          mkdir -p build/target
+          cp ./index.html build
+          cp target/wasm.js build/target
+          cp target/wasm_bg.wasm build/target
+          cp -R assets build
+      - name: Deploy 🚀
+        uses: JamesIves/github-pages-deploy-action@3.7.1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: gh-pages # The branch the action should deploy to.
+          FOLDER: build # The folder the action should deploy.
+          CLEAN: true # Automatically remove deleted files from the deploy branch
   build:
     name: Build
     runs-on: ${{ matrix.os }}
@@ -22,6 +67,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - name: Remove .cargo/config.toml
+        run: rm .cargo/config.toml
       - name: Cache Cargo
         uses: actions/cache@v1
         with:
@@ -40,13 +87,11 @@ jobs:
           crate: cargo-make
           version: latest
           use-tool-cache: true
-
       - name: Build release
         uses: actions-rs/cargo@v1
         with:
           command: make
           args: build-native
-
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v1-release
         if: startsWith(github.ref, 'refs/tags/')
